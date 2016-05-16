@@ -1,7 +1,7 @@
 {
   "name": "async-service-container",
   "version": "0.0.1",
-  "description": "Asynchronous service container.",
+  "description": "Promise based service container for dependency injection.",
   "main": "lib/index.js",
   "scripts": {
     "build": "babel src -d lib",
