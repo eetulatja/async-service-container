@@ -10,7 +10,7 @@ function assertName(name) {
 
 function assertPromise(promise) {
     if (!_.isFunction(promise.then)) {
-        throw Error('`promise` is not a thenable.');
+        throw Error('`servicePromise` is not a thenable.');
     }
 }
 
@@ -25,20 +25,20 @@ export default class ServiceContainer {
     get(name) {
         assertName(name);
 
-        let service = this.services.get(name);
+        let servicePromise = this.services.get(name);
 
-        if (!service) {
-            return;
+        if (!servicePromise) {
+            throw Error(`No service registered with name '${name}'.`);
         }
 
-        return service.promise;
+        return servicePromise;
     }
 
-    set(name, promise) {
+    set(name, servicePromise) {
         assertName(name);
-        assertPromise(promise);
+        assertPromise(servicePromise);
 
-        this.services.set(name, { promise });
+        this.services.set(name, servicePromise);
     }
 
     register(services) {
@@ -47,7 +47,7 @@ export default class ServiceContainer {
             let name = serviceWrapper.name;
             let options = serviceWrapper.options;
 
-            if (this.get(name)) {
+            if (this.services.has(name)) {
                 throw Error(`Duplicate service with name '${name}'.`);
             }
 
@@ -79,10 +79,6 @@ export default class ServiceContainer {
     async getDependencies(name) {
         let service = await this.get(name);
 
-        if (!service) {
-            throw Error(`No service registered with name '${name}'.`);
-        }
-
         let serviceInjector = _.find(this.rootInjector.children, (child) => {
             return child.component === service;
         });
@@ -99,9 +95,7 @@ export default class ServiceContainer {
                 get: (name) => {
                     let dependency = this.get(name);
 
-                    if (dependency) {
-                        injector.dependencies.push(name);
-                    }
+                    injector.dependencies.push(name);
 
                     return dependency;
                 },

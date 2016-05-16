@@ -4,26 +4,36 @@ import Promise from 'bluebird';
 import ServiceContainer from '../src/index';
 
 
+async function catchErrorAsync(fn) {
+    try {
+        await fn();
+    }
+    catch (error) {
+        return error;
+    }
+}
+
+
 describe('#set', () => {
 
-    it('Should set a promise correctly', () => {
+    it('Should set a service correctly', () => {
         let serviceContainer = new ServiceContainer();
 
-        let service = Promise.resolve();
-        serviceContainer.set('testService', service);
+        let servicePromise = Promise.resolve();
+        serviceContainer.set('testService', servicePromise);
 
-        expect(serviceContainer.services.get('testService').promise).to.be(service);
+        expect(serviceContainer.services.get('testService')).to.be(servicePromise);
     });
 
-    it('Should throw on a non-thenable', () => {
+    it('Should throw on a non-thenable service', () => {
         let serviceContainer = new ServiceContainer();
 
         expect(() => {
             serviceContainer.set('testService', {});
-        }).to.throwError(/^`promise` is not a thenable\.$/);
+        }).to.throwError(/^`servicePromise` is not a thenable\.$/);
     });
 
-    it('Should throw on an invalid name', () => {
+    it('Should throw on an invalid service name', () => {
         let serviceContainer = new ServiceContainer();
 
         expect(() => {
@@ -39,22 +49,24 @@ describe('#set', () => {
 
 describe('#get', () => {
 
-    it('Should get a promise correctly', () => {
+    it('Should get a service correctly', () => {
         let serviceContainer = new ServiceContainer();
 
-        let service = Promise.resolve();
-        serviceContainer.set('testService', service);
+        let servicePromise = Promise.resolve();
+        serviceContainer.set('testService', servicePromise);
 
-        expect(serviceContainer.get('testService')).to.be(service);
+        expect(serviceContainer.get('testService')).to.be(servicePromise);
     });
 
-    it('Should return undefined for non-existing promise', () => {
+    it('Should throw for a non-existing service', async () => {
         let serviceContainer = new ServiceContainer();
 
-        expect(serviceContainer.get('testService')).to.be(undefined);
+        expect(() => {
+            serviceContainer.get('testService');
+        }).to.throwError(/^No service registered with name 'testService'\.$/);
     });
 
-    it('Should throw on an invalid name', () => {
+    it('Should throw on an invalid service name', async () => {
         let serviceContainer = new ServiceContainer();
 
         expect(() => {
@@ -70,7 +82,7 @@ describe('#get', () => {
 
 describe('#register', () => {
 
-    it('Should register a service without `init(..)` method', async () => {
+    it('Should register a service without an `init(..)` method', async () => {
         let serviceContainer = new ServiceContainer();
 
         let emptyService = {};
@@ -84,7 +96,7 @@ describe('#register', () => {
         expect(registeredService).to.be(emptyService);
     });
 
-    it('Should register a service with `init(..)` method', async () => {
+    it('Should register a service with an `init(..)` method', async () => {
         let serviceContainer = new ServiceContainer();
 
         let initWasCalled = false;
@@ -122,7 +134,11 @@ describe('#register', () => {
         }).to.throwError(/^Duplicate service with name 'testService'\.$/);
     });
 
-    it('Should set dependecies when accessing another service', async () => {
+});
+
+describe('#getDependencies', () => {
+
+    it('Should get the dependency array for a service', async () => {
         let serviceContainer = new ServiceContainer();
 
         let emptyService = {};
@@ -152,5 +168,25 @@ describe('#register', () => {
         expect(accessedService).to.be(emptyService);
         expect(dummyServiceDependencies).to.eql([ 'emptyService' ]);
     });
+
+    it('Should throw on an invalid service name', async () => {
+        let serviceContainer = new ServiceContainer();
+
+        serviceContainer.register([
+            {
+                name: 'testService',
+                service: {},
+            },
+        ]);
+
+        let error = await catchErrorAsync(async () => {
+            await serviceContainer.getDependencies('invalidService');
+        });
+        expect(error.message).to.be('No service registered with name \'invalidService\'.');
+    });
+
+});
+
+describe('#createInjector', () => {
 
 });
