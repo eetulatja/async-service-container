@@ -22,13 +22,23 @@ export default class ServiceContainer {
     rootInjector = this.createInjector(this);
 
 
+    constructor({ property = 'services' } = {}) {
+        this.property = property;
+    }
+
+
     get(name) {
-        assertName(name);
+        try {
+            assertName(name);
+        }
+        catch (error) {
+            return Promise.reject(error);
+        }
 
         let servicePromise = this.services.get(name);
 
         if (!servicePromise) {
-            throw Error(`No service registered with name '${name}'.`);
+            return Promise.reject(Error(`No service registered with name '${name}'.`));
         }
 
         return servicePromise;
@@ -55,18 +65,14 @@ export default class ServiceContainer {
 
             let servicePromise;
             if (_.isFunction(service.init)) {
-                servicePromise = (async () => {
-                    // `Promise.delay(0)` causes the `service.init(..)`
-                    // to be called on the next event loop tick.
-                    // This is done because we want to map all the promises
-                    // into `services` before any service initialization takes place
-                    // so that dependencies can be properly found.
-                    await Promise.delay(0);
-
-                    await service.init(options);
-
-                    return service;
-                })();
+                // `Promise.resolve()` causes the `service.init(..)`
+                // to be called on the next event loop tick.
+                // This is done because we want to map all the promises
+                // into `services` so that all dependencies are
+                // set before any `init(..)` calls.
+                servicePromise = Promise.resolve().then(() => {
+                    return service.init(options);
+                }).then(() => service);
             }
             else {
                 servicePromise = Promise.resolve(service);
@@ -76,14 +82,14 @@ export default class ServiceContainer {
         }
     }
 
-    async getDependencies(name) {
-        let service = await this.get(name);
+    getDependencies(name) {
+        return this.get(name).then(service => {
+            let serviceInjector = _.find(this.rootInjector.children, (child) => {
+                return child.component === service;
+            });
 
-        let serviceInjector = _.find(this.rootInjector.children, (child) => {
-            return child.component === service;
+            return serviceInjector.dependencies;
         });
-
-        return serviceInjector.dependencies;
     }
 
     createInjector(object) {
@@ -103,7 +109,7 @@ export default class ServiceContainer {
                     let childInjector = this.createInjector(object);
                     injector.children.push(childInjector);
 
-                    object.services = childInjector.public;
+                    object[this.property] = childInjector.public;
 
                     return object;
                 },

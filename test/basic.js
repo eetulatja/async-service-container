@@ -1,7 +1,7 @@
 import expect from 'expect.js';
 import Promise from 'bluebird';
 
-import ServiceContainer from '../src/index';
+import ServiceContainer from '../src';
 
 
 async function catchErrorAsync(fn) {
@@ -25,7 +25,7 @@ describe('#set', () => {
         expect(serviceContainer.services.get('testService')).to.be(servicePromise);
     });
 
-    it('Should throw on a non-thenable service', () => {
+    it('Should throw on a non-thenable service', async () => {
         let serviceContainer = new ServiceContainer();
 
         expect(() => {
@@ -61,21 +61,24 @@ describe('#get', () => {
     it('Should throw for a non-existing service', async () => {
         let serviceContainer = new ServiceContainer();
 
-        expect(() => {
-            serviceContainer.get('testService');
-        }).to.throwError(/^No service registered with name 'testService'\.$/);
+        let error = await catchErrorAsync(async () => {
+            await serviceContainer.get('testService');
+        });
+        expect(error.message).to.be('No service registered with name \'testService\'.');
     });
 
     it('Should throw on an invalid service name', async () => {
         let serviceContainer = new ServiceContainer();
 
-        expect(() => {
-            serviceContainer.get('');
-        }).to.throwError(/^`name` must be a non-empty string\.$/);
+        let error = await catchErrorAsync(async () => {
+            await serviceContainer.get('');
+        });
+        expect(error.message).to.be('`name` must be a non-empty string.');
 
-        expect(() => {
-            serviceContainer.get(1);
-        }).to.throwError(/^`name` must be a non-empty string\.$/);
+        error = await catchErrorAsync(async () => {
+            await serviceContainer.get(1);
+        });
+        expect(error.message).to.be('`name` must be a non-empty string.');
     });
 
 });
@@ -188,5 +191,36 @@ describe('#getDependencies', () => {
 });
 
 describe('#createInjector', () => {
+
+    it('Should be able to set the property for the injector', async () => {
+        let property = Symbol('Services');
+        let serviceContainer = new ServiceContainer({ property: property });
+
+        let emptyService = {};
+
+        let accessedService;
+        let dummyService = {
+            async init() {
+                accessedService = await this[property].get('emptyService');
+            },
+        };
+
+        serviceContainer.register([
+            {
+                name: 'dummyService',
+                service: dummyService,
+            },
+            {
+                name: 'emptyService',
+                service: emptyService,
+            },
+        ]);
+
+        await serviceContainer.get('dummyService');
+
+        let dummyServiceDependencies = await serviceContainer.getDependencies('dummyService');
+
+        expect(accessedService).to.be(emptyService);
+    });
 
 });

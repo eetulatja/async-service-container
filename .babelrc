@@ -1,14 +1,18 @@
 {
   "plugins": [
-    [ "transform-async-to-module-method", {
-      "module": "bluebird",
-      "method": "coroutine"
-    } ],
+    "transform-es2015-parameters",
+    "transform-es2015-destructuring",
     "transform-class-properties"
   ],
   "env": {
     "development": {
-      "plugins": [ "transform-es2015-modules-commonjs" ]
+      "plugins": [
+        [ "transform-async-to-module-method", {
+          "module": "bluebird",
+          "method": "coroutine"
+        } ],
+        "transform-es2015-modules-commonjs"
+      ]
     },
     "production": {
       "plugins": [
