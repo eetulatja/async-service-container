@@ -52,6 +52,8 @@ export default class ServiceContainer {
     }
 
     register(services) {
+        let allServicePromises = [];
+
         for (let serviceWrapper of services) {
             let service = serviceWrapper.service;
             let name = serviceWrapper.name;
@@ -78,8 +80,12 @@ export default class ServiceContainer {
                 servicePromise = Promise.resolve(service);
             }
 
+            allServicePromises.push(servicePromise);
+
             this.set(name, servicePromise);
         }
+
+        return Promise.all(allServicePromises);
     }
 
     getDependencies(name) {

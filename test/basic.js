@@ -1,5 +1,6 @@
 import expect from 'expect.js';
 import Promise from 'bluebird';
+import _ from 'lodash';
 
 import ServiceContainer from '../src';
 
@@ -135,6 +136,80 @@ describe('#register', () => {
                 },
             ]);
         }).to.throwError(/^Duplicate service with name 'testService'\.$/);
+    });
+
+    it('Should return a promise which resolves when all services are ready', async () => {
+        let serviceContainer = new ServiceContainer();
+
+        let testService1 = {};
+        let testService2 = {};
+
+        let registeredServices = await serviceContainer.register([
+            {
+                name: 'testService1',
+                service: testService1,
+            },
+            {
+                name: 'testService2',
+                service: testService2,
+            },
+        ]);
+
+        expect(registeredServices).to.eql([ testService1, testService2 ]);
+    });
+
+    it('Should register services in correct order', async () => {
+        let serviceContainer = new ServiceContainer();
+
+        let numberOfServicesToCreate = 20;
+        let services = [];
+        let serviceNames = [];
+        let actualRegistrationOrder = [];
+
+        function createDummyService(serviceIndex) {
+
+            // Cast service index to string to be used as the service's name.
+            let serviceName = String(serviceIndex);
+
+            let dependsOn;
+            if (serviceIndex < numberOfServicesToCreate - 1) {
+
+                // The dummy service depends on the service whose index is one larger,
+                // except for the service with the largest index, which is not
+                // dependent on anything.
+                dependsOn = String(serviceIndex + 1);
+            }
+
+            serviceNames.push(serviceName);
+
+            let dummyService = {
+                name: serviceName,
+                service: {
+                    async init() {
+                        if (dependsOn) {
+                            await this.services.get(dependsOn);
+                        }
+
+                        actualRegistrationOrder.push(serviceName);
+                    },
+                },
+            };
+
+            return dummyService;
+        }
+
+        for (let i = 0; i < numberOfServicesToCreate; i++) {
+            services.push(createDummyService(i));
+        }
+
+
+        let expectedRegistrationOrder = _.reverse(serviceNames);
+
+        // Shuffle the order of the service constructors in the array
+        // to make the test even more reliable.
+        await serviceContainer.register(_.shuffle(services));
+
+        expect(actualRegistrationOrder).to.eql(expectedRegistrationOrder);
     });
 
 });

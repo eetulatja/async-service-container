@@ -1,6 +1,6 @@
 {
   "name": "async-service-container",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Promise based service container for dependency injection.",
   "main": "lib/index.js",
   "scripts": {
