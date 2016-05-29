@@ -164,7 +164,7 @@ describe('#register', () => {
         let numberOfServicesToCreate = 20;
         let services = [];
         let serviceNames = [];
-        let actualRegistrationOrder = [];
+        let actualInitializationOrder = [];
 
         function createDummyService(serviceIndex) {
 
@@ -190,7 +190,7 @@ describe('#register', () => {
                             await this.services.get(dependsOn);
                         }
 
-                        actualRegistrationOrder.push(serviceName);
+                        actualInitializationOrder.push(serviceName);
                     },
                 },
             };
@@ -203,13 +203,70 @@ describe('#register', () => {
         }
 
 
-        let expectedRegistrationOrder = _.reverse(serviceNames);
+        let expectedInitializationOrder = _.reverse(serviceNames);
 
         // Shuffle the order of the service constructors in the array
         // to make the test even more reliable.
         await serviceContainer.register(_.shuffle(services));
 
-        expect(actualRegistrationOrder).to.eql(expectedRegistrationOrder);
+        expect(actualInitializationOrder).to.eql(expectedInitializationOrder);
+    });
+
+    it('Should deregister services in correct order', async () => {
+        let serviceContainer = new ServiceContainer();
+
+        let numberOfServicesToCreate = 10;
+        let services = [];
+        let serviceNames = [];
+        let actualDeinitializationOrder = [];
+
+        function createDummyService(serviceIndex) {
+
+            // Cast service index to string to be used as the service's name.
+            let serviceName = String(serviceIndex);
+
+            let dependsOn;
+            if (serviceIndex < numberOfServicesToCreate - 1) {
+
+                // The dummy service depends on the service whose index is one larger,
+                // except for the service with the largest index, which is not
+                // dependent on anything.
+                dependsOn = String(serviceIndex + 1);
+            }
+
+            serviceNames.push(serviceName);
+
+            let dummyService = {
+                name: serviceName,
+                service: {
+                    async init() {
+                        if (dependsOn) {
+                            await this.services.get(dependsOn);
+                        }
+                    },
+                    async deinit() {
+                        actualDeinitializationOrder.push(serviceName);
+                    },
+                },
+            };
+
+            return dummyService;
+        }
+
+        for (let i = 0; i < numberOfServicesToCreate; i++) {
+            services.push(createDummyService(i));
+        }
+
+
+        let expectedDeinitializationOrder = serviceNames;
+
+        // Shuffle the order of the service constructors in the array
+        // to make the test even more reliable.
+        await serviceContainer.register(_.shuffle(services));
+
+        await serviceContainer.deregister();
+
+        expect(actualDeinitializationOrder).to.eql(expectedDeinitializationOrder);
     });
 
 });
@@ -228,7 +285,7 @@ describe('#getDependencies', () => {
             },
         };
 
-        serviceContainer.register([
+        await serviceContainer.register([
             {
                 name: 'dummyService',
                 service: dummyService,
@@ -238,8 +295,6 @@ describe('#getDependencies', () => {
                 service: emptyService,
             },
         ]);
-
-        await serviceContainer.get('dummyService');
 
         let dummyServiceDependencies = await serviceContainer.getDependencies('dummyService');
 
@@ -280,7 +335,7 @@ describe('#createInjector', () => {
             },
         };
 
-        serviceContainer.register([
+        await serviceContainer.register([
             {
                 name: 'dummyService',
                 service: dummyService,
@@ -291,11 +346,49 @@ describe('#createInjector', () => {
             },
         ]);
 
-        await serviceContainer.get('dummyService');
-
-        let dummyServiceDependencies = await serviceContainer.getDependencies('dummyService');
-
         expect(accessedService).to.be(emptyService);
+    });
+
+});
+
+describe('Injector', () => {
+
+    describe('#release', () => {
+
+        it ('Should remove a service from injector\'s dependencies', async () => {
+            let serviceContainer = new ServiceContainer();
+
+            let a = {
+                async init() {
+                    await this.services.get('b');
+                    await this.services.get('c');
+                },
+            };
+            let b = {};
+            let c = {};
+
+            serviceContainer.register([
+                {
+                    name: 'a',
+                    service: a,
+                },
+                {
+                    name: 'b',
+                    service: b,
+                },
+                {
+                    name: 'c',
+                    service: c,
+                },
+            ]);
+
+            let aDependencies = await serviceContainer.getDependencies('a');
+            expect(aDependencies).to.eql([ 'b', 'c' ]);
+
+            a.services.release('b');
+            expect(aDependencies).to.eql([ 'c' ]);
+        });
+
     });
 
 });

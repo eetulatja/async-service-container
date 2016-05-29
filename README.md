@@ -19,6 +19,20 @@ Create a new service container.
 
 Returns a promise which gets resolved when all the services have been initialized. A rejected promise is returned if any service initialization returns a rejected promise.
 
+## Injector API
+
+### `get(name)`
+
+Get a service with the given name.
+
+### `release(name)`
+
+Releases the services from this service's dependencies.
+
+### `inject(object)`
+
+Injects the services into the given object.
+
 ## Low level API
 
 ### `get(name)`
@@ -42,13 +56,3 @@ Returns dependencies for service registered as `name` in an array.
 Creates an injector into the given object.
 
 Returns the created injector.
-
-## Injector API
-
-### `get(name)`
-
-Get a service with the given name.
-
-### `inject(object)`
-
-Injects the services into the given object.

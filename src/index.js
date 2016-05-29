@@ -52,7 +52,7 @@ export default class ServiceContainer {
     }
 
     register(services) {
-        let allServicePromises = [];
+        let initPromises = [];
 
         for (let serviceWrapper of services) {
             let service = serviceWrapper.service;
@@ -70,8 +70,7 @@ export default class ServiceContainer {
                 // `Promise.resolve()` causes the `service.init(..)`
                 // to be called on the next event loop tick.
                 // This is done because we want to map all the promises
-                // into `services` so that all dependencies are
-                // set before any `init(..)` calls.
+                // into `this.services` before any `init(..)` calls.
                 servicePromise = Promise.resolve().then(() => {
                     return service.init(options);
                 }).then(() => service);
@@ -80,12 +79,36 @@ export default class ServiceContainer {
                 servicePromise = Promise.resolve(service);
             }
 
-            allServicePromises.push(servicePromise);
+            initPromises.push(servicePromise);
 
             this.set(name, servicePromise);
         }
 
-        return Promise.all(allServicePromises);
+        return Promise.all(initPromises);
+    }
+
+    deregister(name) {
+        let deinitPromises = [];
+
+        if (name) {
+            // TODO deregister a single service
+        }
+        else {
+            // Deregister all services and any components depending on them.
+            function deinitInjector(injector) {
+                injector.deinit();
+
+                deinitPromises.push(injector.deinitialization);
+
+                for (let childInjector of injector.children) {
+                    deinitInjector(childInjector);
+                }
+            }
+
+            deinitInjector(this.rootInjector);
+        }
+
+        return Promise.all(deinitPromises);
     }
 
     getDependencies(name) {
@@ -102,14 +125,46 @@ export default class ServiceContainer {
         let injector = {
             children: [],
             dependencies: [],
+            references: [],
             component: object,
+            deinit: () => {
+                injector.deinitialization = Promise.resolve().then(() => {
+
+                    let referencesDeinitializedPromises = [];
+                    for (let reference of injector.references) {
+                        referencesDeinitializedPromises.push(reference.deinitialization);
+                    }
+
+                    return Promise.all(referencesDeinitializedPromises);
+
+                }).then(() => {
+
+                    if (_.isFunction(injector.component.deinit)) {
+                        return injector.component.deinit();
+                    }
+
+                });
+            },
             public: {
                 get: (name) => {
-                    let dependency = this.get(name);
+                    // TODO Prevent duplicate dependencies if multiple
+                    //      `get(..)` calls are made.
+                    return this.get(name).then(service => {
+                        let dependency = this.get(name);
 
-                    injector.dependencies.push(name);
+                        injector.dependencies.push(name);
 
-                    return dependency;
+                        let serviceInjector = _.find(this.rootInjector.children, (child) => {
+                            return child.component === service;
+                        });
+
+                        serviceInjector.references.push(injector);
+
+                        return dependency;
+                    });
+                },
+                release(name) {
+                    _.pull(injector.dependencies, name);
                 },
                 inject: (object) => {
                     let childInjector = this.createInjector(object);
