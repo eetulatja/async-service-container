@@ -3,6 +3,9 @@ module.exports = {
     parserOptions: {
         ecmaVersion: 2018,
     },
+    env: {
+        mocha: true,
+    },
 
     rules: {
         'indent': [ 'error', 4 ],

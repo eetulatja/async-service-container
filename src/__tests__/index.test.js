@@ -2,7 +2,7 @@ const expect = require('expect.js');
 const Promise = require('bluebird');
 const _ = require('lodash');
 
-const ServiceContainer = require('../src');
+const ServiceContainer = require('..');
 
 
 async function catchErrorAsync(fn) {
