@@ -18,16 +18,16 @@ async function catchErrorAsync(fn) {
 describe('#set', () => {
 
     it('Should set a service correctly', () => {
-        let serviceContainer = new ServiceContainer();
+        const serviceContainer = new ServiceContainer();
 
-        let servicePromise = Promise.resolve();
+        const servicePromise = Promise.resolve();
         serviceContainer.set('testService', servicePromise);
 
         expect(serviceContainer.services.get('testService')).to.be(servicePromise);
     });
 
     it('Should throw on a non-thenable service', async () => {
-        let serviceContainer = new ServiceContainer();
+        const serviceContainer = new ServiceContainer();
 
         expect(() => {
             serviceContainer.set('testService', {});
@@ -35,7 +35,7 @@ describe('#set', () => {
     });
 
     it('Should throw on an invalid service name', () => {
-        let serviceContainer = new ServiceContainer();
+        const serviceContainer = new ServiceContainer();
 
         expect(() => {
             serviceContainer.set('', Promise.resolve());
@@ -51,25 +51,25 @@ describe('#set', () => {
 describe('#get', () => {
 
     it('Should get a service correctly', () => {
-        let serviceContainer = new ServiceContainer();
+        const serviceContainer = new ServiceContainer();
 
-        let servicePromise = Promise.resolve();
+        const servicePromise = Promise.resolve();
         serviceContainer.set('testService', servicePromise);
 
         expect(serviceContainer.get('testService')).to.be(servicePromise);
     });
 
     it('Should throw for a non-existing service', async () => {
-        let serviceContainer = new ServiceContainer();
+        const serviceContainer = new ServiceContainer();
 
-        let error = await catchErrorAsync(async () => {
+        const error = await catchErrorAsync(async () => {
             await serviceContainer.get('testService');
         });
         expect(error.message).to.be('No service registered with name \'testService\'.');
     });
 
     it('Should throw on an invalid service name', async () => {
-        let serviceContainer = new ServiceContainer();
+        const serviceContainer = new ServiceContainer();
 
         let error = await catchErrorAsync(async () => {
             await serviceContainer.get('');
@@ -87,42 +87,46 @@ describe('#get', () => {
 describe('#register', () => {
 
     it('Should register a service without an `init(..)` method', async () => {
-        let serviceContainer = new ServiceContainer();
+        const serviceContainer = new ServiceContainer();
 
-        let emptyService = {};
+        const emptyService = {};
 
-        serviceContainer.register([{
-            name: 'emptyService',
-            service: emptyService,
-        }]);
+        serviceContainer.register([
+            {
+                name: 'emptyService',
+                service: emptyService,
+            },
+        ]);
 
-        let registeredService = await serviceContainer.get('emptyService');
+        const registeredService = await serviceContainer.get('emptyService');
         expect(registeredService).to.be(emptyService);
     });
 
     it('Should register a service with an `init(..)` method', async () => {
-        let serviceContainer = new ServiceContainer();
+        const serviceContainer = new ServiceContainer();
 
         let initWasCalled = false;
 
-        let dummyService = {
+        const dummyService = {
             async init() {
                 initWasCalled = true;
             },
         };
 
-        serviceContainer.register([{
-            name: 'dummyService',
-            service: dummyService,
-        }]);
+        serviceContainer.register([
+            {
+                name: 'dummyService',
+                service: dummyService,
+            },
+        ]);
 
-        let registeredService = await serviceContainer.get('dummyService');
+        const registeredService = await serviceContainer.get('dummyService');
         expect(registeredService).to.be(dummyService);
         expect(initWasCalled).to.be(true);
     });
 
     it('Should throw for duplicate services with same name', async () => {
-        let serviceContainer = new ServiceContainer();
+        const serviceContainer = new ServiceContainer();
 
         expect(() => {
             serviceContainer.register([
@@ -139,12 +143,12 @@ describe('#register', () => {
     });
 
     it('Should return a promise which resolves when all services are ready', async () => {
-        let serviceContainer = new ServiceContainer();
+        const serviceContainer = new ServiceContainer();
 
-        let testService1 = {};
-        let testService2 = {};
+        const testService1 = {};
+        const testService2 = {};
 
-        let registeredServices = await serviceContainer.register([
+        const registeredServices = await serviceContainer.register([
             {
                 name: 'testService1',
                 service: testService1,
@@ -159,17 +163,17 @@ describe('#register', () => {
     });
 
     it('Should register services in correct order', async () => {
-        let serviceContainer = new ServiceContainer();
+        const serviceContainer = new ServiceContainer();
 
-        let numberOfServicesToCreate = 20;
-        let services = [];
-        let serviceNames = [];
-        let actualInitializationOrder = [];
+        const numberOfServicesToCreate = 20;
+        const services = [];
+        const serviceNames = [];
+        const actualInitializationOrder = [];
 
         function createDummyService(serviceIndex) {
 
             // Cast service index to string to be used as the service's name.
-            let serviceName = String(serviceIndex);
+            const serviceName = String(serviceIndex);
 
             let dependsOn;
             if (serviceIndex < numberOfServicesToCreate - 1) {
@@ -182,7 +186,7 @@ describe('#register', () => {
 
             serviceNames.push(serviceName);
 
-            let dummyService = {
+            const dummyService = {
                 name: serviceName,
                 service: {
                     async init() {
@@ -203,7 +207,7 @@ describe('#register', () => {
         }
 
 
-        let expectedInitializationOrder = _.reverse(serviceNames);
+        const expectedInitializationOrder = _.reverse(serviceNames);
 
         // Shuffle the order of the service constructors in the array
         // to make the test even more reliable.
@@ -213,17 +217,17 @@ describe('#register', () => {
     });
 
     it('Should deregister services in correct order', async () => {
-        let serviceContainer = new ServiceContainer();
+        const serviceContainer = new ServiceContainer();
 
-        let numberOfServicesToCreate = 10;
-        let services = [];
-        let serviceNames = [];
-        let actualDeinitializationOrder = [];
+        const numberOfServicesToCreate = 10;
+        const services = [];
+        const serviceNames = [];
+        const actualDeinitializationOrder = [];
 
         function createDummyService(serviceIndex) {
 
             // Cast service index to string to be used as the service's name.
-            let serviceName = String(serviceIndex);
+            const serviceName = String(serviceIndex);
 
             let dependsOn;
             if (serviceIndex < numberOfServicesToCreate - 1) {
@@ -236,7 +240,7 @@ describe('#register', () => {
 
             serviceNames.push(serviceName);
 
-            let dummyService = {
+            const dummyService = {
                 name: serviceName,
                 service: {
                     async init() {
@@ -258,7 +262,7 @@ describe('#register', () => {
         }
 
 
-        let expectedDeinitializationOrder = serviceNames;
+        const expectedDeinitializationOrder = serviceNames;
 
         // Shuffle the order of the service constructors in the array
         // to make the test even more reliable.
@@ -274,12 +278,12 @@ describe('#register', () => {
 describe('#getDependencies', () => {
 
     it('Should get the dependency array for a service', async () => {
-        let serviceContainer = new ServiceContainer();
+        const serviceContainer = new ServiceContainer();
 
-        let emptyService = {};
+        const emptyService = {};
 
         let accessedService;
-        let dummyService = {
+        const dummyService = {
             async init() {
                 accessedService = await this.services.get('emptyService');
             },
@@ -296,14 +300,14 @@ describe('#getDependencies', () => {
             },
         ]);
 
-        let dummyServiceDependencies = await serviceContainer.getDependencies('dummyService');
+        const dummyServiceDependencies = await serviceContainer.getDependencies('dummyService');
 
         expect(accessedService).to.be(emptyService);
         expect(dummyServiceDependencies).to.eql([ 'emptyService' ]);
     });
 
     it('Should throw on an invalid service name', async () => {
-        let serviceContainer = new ServiceContainer();
+        const serviceContainer = new ServiceContainer();
 
         serviceContainer.register([
             {
@@ -312,7 +316,7 @@ describe('#getDependencies', () => {
             },
         ]);
 
-        let error = await catchErrorAsync(async () => {
+        const error = await catchErrorAsync(async () => {
             await serviceContainer.getDependencies('invalidService');
         });
         expect(error.message).to.be('No service registered with name \'invalidService\'.');
@@ -323,13 +327,13 @@ describe('#getDependencies', () => {
 describe('#createInjector', () => {
 
     it('Should be able to set the property for the injector', async () => {
-        let property = Symbol('Services');
-        let serviceContainer = new ServiceContainer({ property: property });
+        const property = Symbol('Services');
+        const serviceContainer = new ServiceContainer({ property });
 
-        let emptyService = {};
+        const emptyService = {};
 
         let accessedService;
-        let dummyService = {
+        const dummyService = {
             async init() {
                 accessedService = await this[property].get('emptyService');
             },
@@ -355,17 +359,17 @@ describe('Injector', () => {
 
     describe('#release', () => {
 
-        it ('Should remove a service from injector\'s dependencies', async () => {
-            let serviceContainer = new ServiceContainer();
+        it('Should remove a service from injector\'s dependencies', async () => {
+            const serviceContainer = new ServiceContainer();
 
-            let a = {
+            const a = {
                 async init() {
                     await this.services.get('b');
                     await this.services.get('c');
                 },
             };
-            let b = {};
-            let c = {};
+            const b = {};
+            const c = {};
 
             serviceContainer.register([
                 {
@@ -382,7 +386,7 @@ describe('Injector', () => {
                 },
             ]);
 
-            let aDependencies = await serviceContainer.getDependencies('a');
+            const aDependencies = await serviceContainer.getDependencies('a');
             expect(aDependencies).to.eql([ 'b', 'c' ]);
 
             a.services.release('b');

@@ -34,7 +34,7 @@ module.exports = class ServiceContainer {
             return Promise.reject(error);
         }
 
-        let servicePromise = this.services.get(name);
+        const servicePromise = this.services.get(name);
 
         if (!servicePromise) {
             return Promise.reject(Error(`No service registered with name '${name}'.`));
@@ -51,12 +51,12 @@ module.exports = class ServiceContainer {
     }
 
     register(services) {
-        let initPromises = [];
+        const initPromises = [];
 
-        for (let serviceWrapper of services) {
-            let service = serviceWrapper.service;
-            let name = serviceWrapper.name;
-            let options = serviceWrapper.options;
+        for (const serviceWrapper of services) {
+            const service = serviceWrapper.service;
+            const name = serviceWrapper.name;
+            const options = serviceWrapper.options;
 
             if (this.services.has(name)) {
                 throw Error(`Duplicate service with name '${name}'.`);
@@ -87,14 +87,14 @@ module.exports = class ServiceContainer {
     }
 
     deregister(name) {
-        let deinitPromises = [];
+        const deinitPromises = [];
 
         function deinitInjector(injector) {
             injector.deinit();
 
             deinitPromises.push(injector.deinitialization);
 
-            for (let childInjector of injector.children) {
+            for (const childInjector of injector.children) {
                 deinitInjector(childInjector);
             }
         }
@@ -112,7 +112,7 @@ module.exports = class ServiceContainer {
 
     getDependencies(name) {
         return this.get(name).then(service => {
-            let serviceInjector = _.find(this.rootInjector.children, (child) => {
+            const serviceInjector = _.find(this.rootInjector.children, (child) => {
                 return child.component === service;
             });
 
@@ -121,7 +121,7 @@ module.exports = class ServiceContainer {
     }
 
     createInjector(object) {
-        let injector = {
+        const injector = {
             children: [],
             dependencies: [],
             references: [],
@@ -129,8 +129,8 @@ module.exports = class ServiceContainer {
             deinit: () => {
                 injector.deinitialization = Promise.resolve().then(() => {
 
-                    let referencesDeinitializedPromises = [];
-                    for (let reference of injector.references) {
+                    const referencesDeinitializedPromises = [];
+                    for (const reference of injector.references) {
                         referencesDeinitializedPromises.push(reference.deinitialization);
                     }
 
@@ -149,11 +149,11 @@ module.exports = class ServiceContainer {
                     // TODO Prevent duplicate dependencies if multiple
                     //      `get(..)` calls are made.
                     return this.get(name).then(service => {
-                        let dependency = this.get(name);
+                        const dependency = this.get(name);
 
                         injector.dependencies.push(name);
 
-                        let serviceInjector = _.find(this.rootInjector.children, (child) => {
+                        const serviceInjector = _.find(this.rootInjector.children, (child) => {
                             return child.component === service;
                         });
 
@@ -166,7 +166,7 @@ module.exports = class ServiceContainer {
                     _.pull(injector.dependencies, name);
                 },
                 inject: (object) => {
-                    let childInjector = this.createInjector(object);
+                    const childInjector = this.createInjector(object);
                     injector.children.push(childInjector);
 
                     object[this.property] = childInjector.public;

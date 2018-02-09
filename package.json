@@ -29,6 +29,7 @@
   "license": "MIT",
   "devDependencies": {
     "eslint": "^4.17.0",
+    "eslint-config-exove-nodejs": "^0.0.4",
     "expect.js": "^0.3.1",
     "husky": "^0.14.3",
     "istanbul": "^1.0.0-alpha.2",
