@@ -1,8 +1,8 @@
-import expect from 'expect.js';
-import Promise from 'bluebird';
-import _ from 'lodash';
+const expect = require('expect.js');
+const Promise = require('bluebird');
+const _ = require('lodash');
 
-import ServiceContainer from '../src';
+const ServiceContainer = require('../src');
 
 
 async function catchErrorAsync(fn) {

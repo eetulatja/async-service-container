@@ -1,5 +1,5 @@
-import _ from 'lodash';
-import Promise from 'bluebird';
+const _ = require('lodash');
+const Promise = require('bluebird');
 
 
 function assertName(name) {
@@ -15,15 +15,14 @@ function assertPromise(promise) {
 }
 
 
-export default class ServiceContainer {
-
-    services = new Map();
-
-    rootInjector = this.createInjector(this);
-
+module.exports = class ServiceContainer {
 
     constructor({ property = 'services' } = {}) {
         this.property = property;
+
+        this.services = new Map();
+
+        this.rootInjector = this.createInjector(this);
     }
 
 
@@ -90,21 +89,21 @@ export default class ServiceContainer {
     deregister(name) {
         let deinitPromises = [];
 
+        function deinitInjector(injector) {
+            injector.deinit();
+
+            deinitPromises.push(injector.deinitialization);
+
+            for (let childInjector of injector.children) {
+                deinitInjector(childInjector);
+            }
+        }
+
         if (name) {
             // TODO deregister a single service
         }
         else {
             // Deregister all services and any components depending on them.
-            function deinitInjector(injector) {
-                injector.deinit();
-
-                deinitPromises.push(injector.deinitialization);
-
-                for (let childInjector of injector.children) {
-                    deinitInjector(childInjector);
-                }
-            }
-
             deinitInjector(this.rootInjector);
         }
 
@@ -180,4 +179,4 @@ export default class ServiceContainer {
         return injector;
     }
 
-}
+};
