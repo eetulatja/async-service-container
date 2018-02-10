@@ -94,7 +94,7 @@ class ServiceContainer {
 
             const init = _.isFunction(service.init) ? service.init.bind(service) : async () => {};
 
-            // Use an IIFE to create a promise that gets resolved with this service
+            // Use an IIFE to create a promise that gets resolved with this service object
             // after its `init` method is complete.
             const servicePromise = (async () => {
                 // Awaiting on `Promise.resolve()` causes the `init` method
@@ -102,7 +102,7 @@ class ServiceContainer {
                 // This is done to defer the execution of `init` methods after
                 // all services have been set into `this.services`.
                 // Otherwise the services might not be able to access their
-                // dependencies due to `get` returning undefined.
+                // dependencies inside `init` due to `get` returning undefined.
                 await Promise.resolve();
 
                 await init(options);
@@ -156,7 +156,7 @@ class ServiceContainer {
         // Deregister all services and any components depending on them.
         deinitInjector(this.rootInjector);
 
-        return Promise.all(deinitPromises);
+        await Promise.all(deinitPromises);
     }
 
     /**
@@ -166,14 +166,14 @@ class ServiceContainer {
      *
      * @return {string[]} List of service names
      */
-    getDependencies(name) {
-        return this.get(name).then(service => {
-            const serviceInjector = _.find(this.rootInjector.children, (child) => {
-                return child.component === service;
-            });
+    async getDependencies(name) {
+        const service = await this.get(name);
 
-            return serviceInjector.dependencies;
+        const { dependencies } = _.find(this.rootInjector.children, child => {
+            return child.component === service;
         });
+
+        return dependencies;
     }
 
     createInjector(object) {
