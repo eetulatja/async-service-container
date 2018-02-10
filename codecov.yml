@@ -1,0 +1,6 @@
+parsers:
+  javascript:
+    enable_partials: yes
+
+ignore:
+  - "**/*.test.js"

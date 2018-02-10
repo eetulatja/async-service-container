@@ -10,7 +10,12 @@ cache:
   directories:
     - "node_modules"
     
+branches:
+  only:
+   - master
+
 script:
  - yarn lint
  - yarn coverage
+ - yarn report
  - yarn codecov

@@ -34,6 +34,12 @@ module.exports = class ServiceContainer {
             return Promise.reject(error);
         }
 
+        const a = false;
+        const b = true;
+        if (a && b) {
+            console.log('moi')
+        }
+
         const servicePromise = this.services.get(name);
 
         if (!servicePromise) {
