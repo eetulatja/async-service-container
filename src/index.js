@@ -34,7 +34,9 @@ module.exports = class ServiceContainer {
             return Promise.reject(error);
         }
 
-        if (false) {
+        const a = false;
+        const b = true;
+        if (a && b) {
             console.log('moi')
         }
 
