@@ -1,6 +1,7 @@
 # async-service-container
 
 [![Build Status](https://travis-ci.org/eetulatja/async-service-container.svg?branch=master)](https://travis-ci.org/eetulatja/async-service-container)
+[![npm](https://img.shields.io/npm/v/async-service-container.svg)](https://www.npmjs.com/package/async-service-container)
 
 Promise based service container for dependency injection.
 
