@@ -8,11 +8,26 @@ Promise based service container for dependency injection.
 
 ## Installation
 
-	npm install async-service-container
+    npm install async-service-container
 
 #### Requirements
 
 * Node.js **v7.6.0** or higher
+
+## Usage
+
+    const { ServiceContainer } = require('async-service-container');
+
+    const container = new ServiceContainer();
+
+    class MyService {}
+
+    container.register([
+        {
+            name: 'myService',
+            service: new MyService(),
+        },
+    ]);
 
 ## High level API
 
@@ -25,9 +40,9 @@ Create a new service container.
 ### `register(services)`
 
 * `services` Array of services to register. Each array element has the following properties:
-	* `name` The name to register the service with.
-	* `service` The actual service object.
-	* `options` Optional. Options given to the service's `init(..)` method.
+    * `name` The name to register the service with.
+    * `service` The actual service object.
+    * `options` Optional. Options given to the service's `init(..)` method.
 
 Returns a promise which gets resolved when all the services have been initialized. A rejected promise is returned if any service initialization returns a rejected promise.
 

@@ -1,4 +1,4 @@
-const expect = require('expect.js');
+const { expect } = require('chai');
 const Promise = require('bluebird');
 const _ = require('lodash');
 
@@ -23,7 +23,7 @@ describe('#set', () => {
         const servicePromise = Promise.resolve();
         serviceContainer.set('testService', servicePromise);
 
-        expect(serviceContainer.services.get('testService')).to.be(servicePromise);
+        expect(serviceContainer.services.get('testService')).to.equal(servicePromise);
     });
 
     it('Should throw on a non-thenable service', async () => {
@@ -31,7 +31,7 @@ describe('#set', () => {
 
         expect(() => {
             serviceContainer.set('testService', {});
-        }).to.throwError(/^`servicePromise` is not a thenable\.$/);
+        }).to.throw('`servicePromise` is not a thenable.');
     });
 
     it('Should throw on an invalid service name', () => {
@@ -39,11 +39,11 @@ describe('#set', () => {
 
         expect(() => {
             serviceContainer.set('', Promise.resolve());
-        }).to.throwError(/^`name` must be a non-empty string\.$/);
+        }).to.throw('`name` must be a non-empty string.');
 
         expect(() => {
             serviceContainer.set(1, Promise.resolve());
-        }).to.throwError(/^`name` must be a non-empty string\.$/);
+        }).to.throw('`name` must be a non-empty string.');
     });
 
 });
@@ -56,7 +56,7 @@ describe('#get', () => {
         const servicePromise = Promise.resolve();
         serviceContainer.set('testService', servicePromise);
 
-        expect(serviceContainer.get('testService')).to.be(servicePromise);
+        expect(serviceContainer.get('testService')).to.equal(servicePromise);
     });
 
     it('Should throw for a non-existing service', async () => {
@@ -65,7 +65,7 @@ describe('#get', () => {
         const error = await catchErrorAsync(async () => {
             await serviceContainer.get('testService');
         });
-        expect(error.message).to.be('No service registered with name \'testService\'.');
+        expect(error.message).to.equal('No service registered with name \'testService\'.');
     });
 
     it('Should throw on an invalid service name', async () => {
@@ -74,12 +74,12 @@ describe('#get', () => {
         let error = await catchErrorAsync(async () => {
             await serviceContainer.get('');
         });
-        expect(error.message).to.be('`name` must be a non-empty string.');
+        expect(error.message).to.equal('`name` must be a non-empty string.');
 
         error = await catchErrorAsync(async () => {
             await serviceContainer.get(1);
         });
-        expect(error.message).to.be('`name` must be a non-empty string.');
+        expect(error.message).to.equal('`name` must be a non-empty string.');
     });
 
 });
@@ -99,7 +99,7 @@ describe('#register', () => {
         ]);
 
         const registeredService = await serviceContainer.get('emptyService');
-        expect(registeredService).to.be(emptyService);
+        expect(registeredService).to.equal(emptyService);
     });
 
     it('Should register a service with an `init(..)` method', async () => {
@@ -121,8 +121,8 @@ describe('#register', () => {
         ]);
 
         const registeredService = await serviceContainer.get('dummyService');
-        expect(registeredService).to.be(dummyService);
-        expect(initWasCalled).to.be(true);
+        expect(registeredService).to.equal(dummyService);
+        expect(initWasCalled).to.equal(true);
     });
 
     it('Should throw for duplicate services with same name', async () => {
@@ -139,7 +139,7 @@ describe('#register', () => {
                     service: {},
                 },
             ]);
-        }).to.throwError(/^Duplicate service with name 'testService'\.$/);
+        }).to.throw('Duplicate service with name \'testService\'.');
     });
 
     it('Should return a promise which resolves when all services are ready', async () => {
@@ -302,7 +302,7 @@ describe('#getDependencies', () => {
 
         const dummyServiceDependencies = await serviceContainer.getDependencies('dummyService');
 
-        expect(accessedService).to.be(emptyService);
+        expect(accessedService).to.equal(emptyService);
         expect(dummyServiceDependencies).to.eql([ 'emptyService' ]);
     });
 
@@ -319,7 +319,7 @@ describe('#getDependencies', () => {
         const error = await catchErrorAsync(async () => {
             await serviceContainer.getDependencies('invalidService');
         });
-        expect(error.message).to.be('No service registered with name \'invalidService\'.');
+        expect(error.message).to.equal('No service registered with name \'invalidService\'.');
     });
 
 });
@@ -350,7 +350,7 @@ describe('#createInjector', () => {
             },
         ]);
 
-        expect(accessedService).to.be(emptyService);
+        expect(accessedService).to.equal(emptyService);
     });
 
 });
