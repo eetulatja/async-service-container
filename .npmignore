@@ -2,3 +2,6 @@ coverage
 .npmignore
 .eslintrc.js
 __tests__
+.nyc_output
+.codecov.yml
+.travis.yml
