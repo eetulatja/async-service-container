@@ -35,6 +35,9 @@
       "pre-commit": "yarn precommit"
     }
   },
+  "engines": {
+    "node": ">=7.6.0"
+  },
   "dependencies": {
     "bluebird": "^3.3.5",
     "lodash": "^4.11.2"

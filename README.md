@@ -2,6 +2,14 @@
 
 Promise based service container for dependency injection.
 
+## Installation
+
+	npm install async-service-container
+
+#### Requirements
+
+* Node.js **v7.6.0** or higher
+
 ## High level API
 
 ### `new ServiceContainer({ property })`
