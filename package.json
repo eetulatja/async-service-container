@@ -17,7 +17,12 @@
     "asynchronous",
     "service",
     "container",
-    "promise"
+    "promise",
+    "ioc",
+    "inversion",
+    "control",
+    "dependency",
+    "injection"
   ],
   "scripts": {
     "coverage": "istanbul cover _mocha -- src/__tests__",
