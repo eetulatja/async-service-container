@@ -13,3 +13,4 @@ cache:
 script:
  - yarn lint
  - yarn coverage
+ - yarn codecov

@@ -8,10 +8,7 @@
   },
   "license": "MIT",
   "main": "src/index.js",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/eetulatja/async-service-container"
-  },
+  "repository": "github:eetulatja/async-service-container",
   "keywords": [
     "async",
     "asynchronous",
@@ -25,6 +22,7 @@
     "injection"
   ],
   "scripts": {
+    "codecov": "codecov",
     "coverage": "istanbul cover _mocha -- src/__tests__",
     "lint": "eslint src/**/*.js",
     "precommit": "yarn lint && yarn test",
@@ -43,6 +41,7 @@
     "lodash": "^4.11.2"
   },
   "devDependencies": {
+    "codecov": "^3.0.0",
     "eslint": "^4.17.0",
     "eslint-config-exove-nodejs": "^0.0.4",
     "expect.js": "^0.3.1",
