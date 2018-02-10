@@ -15,14 +15,19 @@ function assertPromise(promise) {
 }
 
 
+// The symbol used to access services from the injectors.
+const services = Symbol('Services');
+
+
 class ServiceContainer {
 
     /**
      * Create a new service container.
      *
      * @param {string|Symbol} [property] - Property to which the services get injected.
+     *        By default this is the `services` symbol.
      */
-    constructor({ property = 'services' } = {}) {
+    constructor({ property = services } = {}) {
         this.property = property;
 
         this.services = new Map();
@@ -239,4 +244,5 @@ class ServiceContainer {
 
 module.exports = {
     ServiceContainer,
+    services,
 };

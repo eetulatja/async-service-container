@@ -2,7 +2,7 @@ const { expect } = require('chai');
 const Promise = require('bluebird');
 const _ = require('lodash');
 
-const { ServiceContainer } = require('..');
+const { ServiceContainer, services: injector } = require('..');
 
 
 async function catchErrorAsync(fn) {
@@ -217,7 +217,7 @@ describe('#register', () => {
                 service: {
                     async init() {
                         if (dependsOn) {
-                            await this.services.get(dependsOn);
+                            await this[injector].get(dependsOn);
                         }
 
                         actualInitializationOrder.push(serviceName);
@@ -275,7 +275,7 @@ describe('#deregister', () => {
                 service: {
                     async init() {
                         if (dependsOn) {
-                            await this.services.get(dependsOn);
+                            await this[injector].get(dependsOn);
                         }
                     },
                     async deinit() {
@@ -315,7 +315,7 @@ describe('#getDependencies', () => {
         let accessedService;
         const dummyService = {
             async init() {
-                accessedService = await this.services.get('emptyService');
+                accessedService = await this[injector].get('emptyService');
             },
         };
 
@@ -357,15 +357,14 @@ describe('#getDependencies', () => {
 describe('#createInjector', () => {
 
     it('Should be able to set the property for the injector', async () => {
-        const property = Symbol('Services');
-        const serviceContainer = new ServiceContainer({ property });
+        const serviceContainer = new ServiceContainer({ property: 'services' });
 
         const emptyService = {};
 
         let accessedService;
         const dummyService = {
             async init() {
-                accessedService = await this[property].get('emptyService');
+                accessedService = await this.services.get('emptyService');
             },
         };
 
@@ -394,8 +393,8 @@ describe('Injector', () => {
 
             const a = {
                 async init() {
-                    await this.services.get('b');
-                    await this.services.get('c');
+                    await this[injector].get('b');
+                    await this[injector].get('c');
                 },
             };
             const b = {};
@@ -419,7 +418,7 @@ describe('Injector', () => {
             const aDependencies = await serviceContainer.getDependencies('a');
             expect(aDependencies).to.eql([ 'b', 'c' ]);
 
-            a.services.release('b');
+            a[injector].release('b');
             expect(aDependencies).to.eql([ 'c' ]);
         });
 
