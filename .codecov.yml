@@ -1,4 +1,3 @@
-coverage:
-  parsers:
-    javascript:
-      enable_partials: yes
+parsers:
+  javascript:
+    enable_partials: yes
