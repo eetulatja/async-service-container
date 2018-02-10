@@ -15,7 +15,7 @@ function assertPromise(promise) {
 }
 
 
-module.exports = class ServiceContainer {
+class ServiceContainer {
 
     constructor({ property = 'services' } = {}) {
         this.property = property;
@@ -26,21 +26,17 @@ module.exports = class ServiceContainer {
     }
 
 
-    get(name) {
-        try {
-            assertName(name);
-        }
-        catch (error) {
-            return Promise.reject(error);
-        }
+    async get(name) {
+        assertName(name);
 
-        const servicePromise = this.services.get(name);
-
-        if (!servicePromise) {
-            return Promise.reject(Error(`No service registered with name '${name}'.`));
+        if (!this.services.has(name)) {
+            throw new Error(`No service registered with name '${name}'.`);
         }
 
-        return servicePromise;
+        // TODO Define behavior when an init promise gets rejected.
+        const service = await this.services.get(name);
+
+        return service;
     }
 
     set(name, servicePromise) {
@@ -50,40 +46,47 @@ module.exports = class ServiceContainer {
         this.services.set(name, servicePromise);
     }
 
-    register(services) {
-        const initPromises = [];
-
-        for (const serviceWrapper of services) {
-            const service = serviceWrapper.service;
-            const name = serviceWrapper.name;
-            const options = serviceWrapper.options;
+    async register(serviceDefinitions) {
+        const servicePromises = serviceDefinitions.map(serviceDefinition => {
+            const { service, name, options } = serviceDefinition;
 
             if (this.services.has(name)) {
                 throw Error(`Duplicate service with name '${name}'.`);
             }
 
+            // TODO Add explanation
             this.rootInjector.public.inject(service);
 
-            let servicePromise;
-            if (_.isFunction(service.init)) {
-                // `Promise.resolve()` causes the `service.init(..)`
-                // to be called on the next event loop tick.
-                // This is done because we want to map all the promises
-                // into `this.services` before any `init(..)` calls.
-                servicePromise = Promise.resolve().then(() => {
-                    return service.init(options);
-                }).then(() => service);
-            }
-            else {
-                servicePromise = Promise.resolve(service);
-            }
+            const init = _.isFunction(service.init) ? service.init.bind(service) : async () => {};
 
-            initPromises.push(servicePromise);
+            // Use an IIFE to create a promise that gets resolved with this service
+            // after its `init` method is complete.
+            const servicePromise = (async () => {
+                // Awaiting on `Promise.resolve()` causes the `init` method
+                // to be called on the next event loop tick.
+                // This is done to defer the execution of `init` methods after
+                // all services have been set into `this.services`.
+                // Otherwise the services might not be able to access their
+                // dependencies due to `get` returning undefined.
+                await Promise.resolve();
+
+                await init(options);
+
+                return service;
+            })();
 
             this.set(name, servicePromise);
-        }
 
-        return Promise.all(initPromises);
+            return servicePromise;
+        });
+
+        // TODO It doesn't really make sense to return an array of the services.
+        //      This is here to make the current unit tests pass.
+        //      Figure out a better way to test that this promise resolves after
+        //      all init promises.
+        const services = await Promise.all(servicePromises);
+
+        return services;
     }
 
     deregister(name) {
@@ -179,4 +182,8 @@ module.exports = class ServiceContainer {
         return injector;
     }
 
+};
+
+module.exports = {
+    ServiceContainer,
 };

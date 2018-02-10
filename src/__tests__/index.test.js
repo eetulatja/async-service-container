@@ -2,7 +2,7 @@ const { expect } = require('chai');
 const Promise = require('bluebird');
 const _ = require('lodash');
 
-const ServiceContainer = require('..');
+const { ServiceContainer } = require('..');
 
 
 async function catchErrorAsync(fn) {
@@ -50,13 +50,15 @@ describe('#set', () => {
 
 describe('#get', () => {
 
-    it('Should get a service correctly', () => {
+    it('Should get a service correctly', async () => {
         const serviceContainer = new ServiceContainer();
 
-        const servicePromise = Promise.resolve();
+        const service = {};
+        const servicePromise = Promise.resolve(service);
         serviceContainer.set('testService', servicePromise);
 
-        expect(serviceContainer.get('testService')).to.equal(servicePromise);
+        const returnedService = await serviceContainer.get('testService');
+        expect(returnedService).to.equal(service);
     });
 
     it('Should throw for a non-existing service', async () => {
@@ -125,11 +127,34 @@ describe('#register', () => {
         expect(initWasCalled).to.equal(true);
     });
 
+    it('`init` is called with correct `this` context', async () => {
+        const serviceContainer = new ServiceContainer();
+
+        let calledWithContext;
+
+        const dummyService = {
+            async init() {
+                calledWithContext = this;
+            },
+        };
+
+        serviceContainer.register([
+            {
+                name: 'dummyService',
+                service: dummyService,
+            },
+        ]);
+
+        const registeredService = await serviceContainer.get('dummyService');
+        expect(registeredService).to.equal(dummyService);
+        expect(calledWithContext).to.equal(dummyService);
+    });
+
     it('Should throw for duplicate services with same name', async () => {
         const serviceContainer = new ServiceContainer();
 
-        expect(() => {
-            serviceContainer.register([
+        const error = await catchErrorAsync(async () => {
+            await serviceContainer.register([
                 {
                     name: 'testService',
                     service: {},
@@ -139,7 +164,8 @@ describe('#register', () => {
                     service: {},
                 },
             ]);
-        }).to.throw('Duplicate service with name \'testService\'.');
+        });
+        expect(error.message).to.equal('Duplicate service with name \'testService\'.');
     });
 
     it('Should return a promise which resolves when all services are ready', async () => {
