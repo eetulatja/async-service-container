@@ -1,5 +1,7 @@
 # async-service-container
 
+[![Build Status](https://travis-ci.org/eetulatja/async-service-container.svg?branch=master)](https://travis-ci.org/eetulatja/async-service-container)
+
 Promise based service container for dependency injection.
 
 ## Installation
