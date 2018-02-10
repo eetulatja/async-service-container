@@ -23,9 +23,10 @@
   ],
   "scripts": {
     "codecov": "codecov",
-    "coverage": "nyc --reporter=lcov --reporter=text mocha src/__tests__",
+    "coverage": "nyc --reporter=lcov --reporter=text yarn test",
     "lint": "eslint src/**/*.js",
     "precommit": "yarn lint && yarn test",
+    "report": "nyc report --reporter=text-lcov > coverage.lcov",
     "test": "mocha src/__tests__"
   },
   "husky": {
