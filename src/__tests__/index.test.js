@@ -242,6 +242,10 @@ describe('#register', () => {
         expect(actualInitializationOrder).to.eql(expectedInitializationOrder);
     });
 
+});
+
+describe('#deregister', () => {
+
     it('Should deregister services in correct order', async () => {
         const serviceContainer = new ServiceContainer();
 

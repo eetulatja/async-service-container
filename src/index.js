@@ -17,6 +17,11 @@ function assertPromise(promise) {
 
 class ServiceContainer {
 
+    /**
+     * Create a new service container.
+     *
+     * @param {string|Symbol} [property] - Property to which the services get injected.
+     */
     constructor({ property = 'services' } = {}) {
         this.property = property;
 
@@ -26,6 +31,13 @@ class ServiceContainer {
     }
 
 
+    /**
+     * Get a service with the given name.
+     *
+     * @param {string} name
+     *
+     * @return {Promise<Object>}
+     */
     async get(name) {
         assertName(name);
 
@@ -39,6 +51,14 @@ class ServiceContainer {
         return service;
     }
 
+    /**
+     * Set a service into the container.
+     *
+     * This is low-level API which shouldn't be needed in normal usage.
+     *
+     * @param {string} name
+     * @param {Promise<Object>} servicePromise
+     */
     set(name, servicePromise) {
         assertName(name);
         assertPromise(servicePromise);
@@ -46,6 +66,21 @@ class ServiceContainer {
         this.services.set(name, servicePromise);
     }
 
+    /**
+     * Register services into the container.
+     *
+     * If a service object has an `init` method defined on it, it is called and
+     * the service is considered ready when that promise get fulfilled.
+     *
+     * @param {Object[]} serviceDefinitions - List of object defining what services
+     *        to register.
+     * @param {Object} serviceDefinitions.service - The service object to register.
+     * @param {string} serviceDefinitions.name - Name of the service.
+     * @param {Object} [serviceDefinitions.options] - Possible options given to the
+     *        `init` method of the service.
+     *
+     * @return {Promise} Resolved when all services are ready.
+     */
     async register(serviceDefinitions) {
         const servicePromises = serviceDefinitions.map(serviceDefinition => {
             const { service, name, options } = serviceDefinition;
@@ -80,7 +115,7 @@ class ServiceContainer {
             return servicePromise;
         });
 
-        // TODO It doesn't really make sense to return an array of the services.
+        // TODO It doesn't really make sense to return an array containing the services.
         //      This is here to make the current unit tests pass.
         //      Figure out a better way to test that this promise resolves after
         //      all init promises.
@@ -89,7 +124,20 @@ class ServiceContainer {
         return services;
     }
 
-    deregister(name) {
+    /**
+     * Deregister services from the container.
+     *
+     * If a service has a `deinit` method defined on it, it is called and
+     * the service is considered deinitialized when that promise get fulfilled.
+     * The deinitialization order is so that an individual service is deinitialized
+     * after all its dependencies are deinitialized.
+     *
+     * @param {string} [name] Name of the service to deregister.
+     *        If not given, all services are deregistered.
+     *
+     @return {Promise} Resolved when all requested services are deinitialized.
+     */
+    async deregister() {
         const deinitPromises = [];
 
         function deinitInjector(injector) {
@@ -102,17 +150,22 @@ class ServiceContainer {
             }
         }
 
-        if (name) {
-            // TODO deregister a single service
-        }
-        else {
-            // Deregister all services and any components depending on them.
-            deinitInjector(this.rootInjector);
-        }
+        // TODO In case of a dead lock (two services both depend on each other),
+        //      throw an error.
+
+        // Deregister all services and any components depending on them.
+        deinitInjector(this.rootInjector);
 
         return Promise.all(deinitPromises);
     }
 
+    /**
+     * Get the dependencies of a service.
+     *
+     * @param {string} name
+     *
+     * @return {string[]} List of service names
+     */
     getDependencies(name) {
         return this.get(name).then(service => {
             const serviceInjector = _.find(this.rootInjector.children, (child) => {
