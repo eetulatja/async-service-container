@@ -35,7 +35,7 @@ Promise based service container for dependency injection.
 
 Create a new service container.
 
-* `property` The name of the injector property. Default: `'services'`
+* `property` The name of the injector property. Default: `services` symbol
 
 ### `register(services)`
 

@@ -2,61 +2,76 @@ const _ = require('lodash');
 const Promise = require('bluebird');
 
 
-module.exports = function createInjector(serviceContainer, object) {
-    const injector = {
-        children: [],
-        dependencies: [],
-        references: [],
-        component: object,
-        deinit: () => {
-            injector.deinitialization = Promise.resolve().then(() => {
+class Injector {
 
-                const referencesDeinitializedPromises = [];
-                for (const reference of injector.references) {
-                    referencesDeinitializedPromises.push(reference.deinitialization);
-                }
+    constructor(serviceContainer, object) {
+        this.children = [];
+        this.dependencies = [];
+        this.references = [];
+        this.object = object;
 
-                return Promise.all(referencesDeinitializedPromises);
+        this.public = new InjectorPublic(serviceContainer, this);
+    }
 
-            }).then(() => {
 
-                if (_.isFunction(injector.component.deinit)) {
-                    return injector.component.deinit();
-                }
+    async deinit() {
+        this.deinitialization = (async () => {
+            await Promise.resolve();
 
-            });
-        },
-        public: {
-            get: (name) => {
-                // TODO Prevent duplicate dependencies if multiple
-                //      `get(..)` calls are made.
-                return serviceContainer.get(name).then(service => {
-                    const dependency = serviceContainer.get(name);
+            const referencesDeinitializedPromises = [];
+            for (const reference of this.references) {
+                referencesDeinitializedPromises.push(reference.deinitialization);
+            }
 
-                    injector.dependencies.push(name);
+            await Promise.all(referencesDeinitializedPromises);
 
-                    const serviceInjector = _.find(serviceContainer.rootInjector.children, (child) => {
-                        return child.component === service;
-                    });
+            if (_.isFunction(this.object.deinit)) {
+                await this.object.deinit();
+            }
+        })();
 
-                    serviceInjector.references.push(injector);
+        await this.deinitialization;
+    }
 
-                    return dependency;
-                });
-            },
-            release(name) {
-                _.pull(injector.dependencies, name);
-            },
-            inject: (object) => {
-                const childInjector = createInjector(serviceContainer, object);
-                injector.children.push(childInjector);
+}
 
-                object[serviceContainer.property] = childInjector.public;
+class InjectorPublic {
 
-                return object;
-            },
-        },
-    };
+    constructor(serviceContainer, injector) {
+        this.serviceContainer = serviceContainer;
+        this.injector = injector;
+    }
 
-    return injector;
-};
+
+    async get(name) {
+        // TODO Prevent duplicate dependencies if multiple
+        //      `get(..)` calls are made.
+        const service = await this.serviceContainer.get(name);
+
+        this.injector.dependencies.push(name);
+
+        const serviceInjector = _.find(this.serviceContainer.rootInjector.children, (child) => {
+            return child.object === service;
+        });
+
+        serviceInjector.references.push(this.injector);
+
+        return service;
+    }
+
+    release(name) {
+        _.pull(this.injector.dependencies, name);
+    }
+
+    inject(object) {
+        const childInjector = new Injector(this.serviceContainer, object);
+        this.injector.children.push(childInjector);
+
+        object[this.serviceContainer.property] = childInjector.public;
+
+        return object;
+    }
+
+}
+
+module.exports = Injector;

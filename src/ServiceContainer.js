@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const Promise = require('bluebird');
 
-const createInjector = require('./Injector');
+const Injector = require('./Injector');
 
 
 function assertName(name) {
@@ -34,7 +34,7 @@ class ServiceContainer {
 
         this.services = new Map();
 
-        this.rootInjector = createInjector(this, this);
+        this.rootInjector = new Injector(this, this);
     }
 
 
@@ -177,7 +177,7 @@ class ServiceContainer {
         const service = await this.get(name);
 
         const { dependencies } = _.find(this.rootInjector.children, child => {
-            return child.component === service;
+            return child.object === service;
         });
 
         return dependencies;
