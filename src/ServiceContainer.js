@@ -168,7 +168,7 @@ class ServiceContainer {
     async getDependencies(name) {
         const service = await this.get(name);
 
-        const { dependencies } = this.rootInjector.findInjector(service);
+        const { dependencies } = this.rootInjector.findChildInjector(service);
 
         return dependencies;
     }

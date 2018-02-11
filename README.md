@@ -46,6 +46,12 @@ Create a new service container.
 
 Returns a promise which gets resolved when all the services have been initialized. A rejected promise is returned if any service initialization returns a rejected promise.
 
+### `deregister()`
+
+Deinitialize all services in the container.
+
+Returns a promise which gets resolved when all the services have been deinitialized. A rejected promise is returned if any service deinitialization returns a rejected promise.
+
 ## Injector API
 
 ### `get(name)`

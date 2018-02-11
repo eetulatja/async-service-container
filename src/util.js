@@ -13,6 +13,7 @@ const _ = require('lodash');
  * @throws {AssertionError}
  */
 function assertNonEmptyString(value, variableName) {
+    // TODO Unit test
     assert(
         _.isString(value) && value.length > 0,
         `\`${variableName}\` must be a non-empty string.`,
@@ -29,6 +30,7 @@ function assertNonEmptyString(value, variableName) {
  * @throws {AssertionError}
  */
 function assertThenable(value, variableName) {
+    // TODO Unit test
     assert(
         _.isFunction(value.then),
         `\`${variableName}\` is not a thenable.`,
@@ -45,6 +47,7 @@ function assertThenable(value, variableName) {
  * @return {function}
  */
 function bindOrNoop(func, context) {
+    // TODO Unit test
     const bound = _.isFunction(func) ? func.bind(context) : async () => {};
 
     return bound;
