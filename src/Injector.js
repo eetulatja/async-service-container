@@ -41,9 +41,7 @@ class Injector {
 
         this.dependencies.push(name);
 
-        const serviceInjector = _.find(this.serviceContainer.rootInjector.children, (child) => {
-            return child.object === service;
-        });
+        const serviceInjector = this.serviceContainer.rootInjector.findInjector(service);
 
         serviceInjector.references.push(this);
 
@@ -61,6 +59,14 @@ class Injector {
         object[this.serviceContainer.property] = childInjector;
 
         return object;
+    }
+
+    findInjector(object) {
+        const injector = _.find(this.children, (child) => {
+            return child.object === object;
+        });
+
+        return injector;
     }
 
 }
