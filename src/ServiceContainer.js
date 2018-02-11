@@ -1,20 +1,12 @@
 const _ = require('lodash');
 const Promise = require('bluebird');
 
+const {
+    assertNonEmptyString,
+    assertThenable,
+    bindOrNoop,
+} = require('./util');
 const Injector = require('./Injector');
-
-
-function assertName(name) {
-    if (!_.isString(name) || !name) {
-        throw Error('`name` must be a non-empty string.');
-    }
-}
-
-function assertPromise(promise) {
-    if (!_.isFunction(promise.then)) {
-        throw Error('`servicePromise` is not a thenable.');
-    }
-}
 
 
 // The symbol used to access services from the injectors.
@@ -46,7 +38,7 @@ class ServiceContainer {
      * @return {Promise<Object>}
      */
     async get(name) {
-        assertName(name);
+        assertNonEmptyString(name, 'name');
 
         if (!this.services.has(name)) {
             throw new Error(`No service registered with name '${name}'.`);
@@ -67,8 +59,8 @@ class ServiceContainer {
      * @param {Promise<Object>} servicePromise
      */
     set(name, servicePromise) {
-        assertName(name);
-        assertPromise(servicePromise);
+        assertNonEmptyString(name, 'name');
+        assertThenable(servicePromise, 'servicePromise');
 
         this.services.set(name, servicePromise);
     }
@@ -99,8 +91,6 @@ class ServiceContainer {
             // TODO Add explanation
             this.rootInjector.inject(service);
 
-            const init = _.isFunction(service.init) ? service.init.bind(service) : async () => {};
-
             // Use an IIFE to create a promise that gets resolved with this service object
             // after its `init` method is complete.
             const servicePromise = (async () => {
@@ -112,6 +102,8 @@ class ServiceContainer {
                 // dependencies inside `init` due to `get` returning undefined.
                 await Promise.resolve();
 
+                // Call the `init` method of the service if one exits.
+                const init = bindOrNoop(service.init, service);
                 await init(options);
 
                 return service;

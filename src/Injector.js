@@ -1,6 +1,8 @@
 const _ = require('lodash');
 const Promise = require('bluebird');
 
+const { bindOrNoop } = require('./util');
+
 
 class Injector {
 
@@ -24,9 +26,9 @@ class Injector {
 
             await Promise.all(referencesDeinitializedPromises);
 
-            if (_.isFunction(this.object.deinit)) {
-                await this.object.deinit();
-            }
+            // Call the `deinit` method of the object if one exits.
+            const deinit = bindOrNoop(this.object.deinit, this.object);
+            await deinit();
         })();
 
         await this.deinitialization;
