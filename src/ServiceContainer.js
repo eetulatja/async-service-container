@@ -97,7 +97,7 @@ class ServiceContainer {
             }
 
             // TODO Add explanation
-            this.rootInjector.public.inject(service);
+            this.rootInjector.inject(service);
 
             const init = _.isFunction(service.init) ? service.init.bind(service) : async () => {};
 

@@ -5,12 +5,11 @@ const Promise = require('bluebird');
 class Injector {
 
     constructor(serviceContainer, object) {
+        this.serviceContainer = serviceContainer;
         this.children = [];
         this.dependencies = [];
         this.references = [];
         this.object = object;
-
-        this.public = new InjectorPublic(serviceContainer, this);
     }
 
 
@@ -33,41 +32,31 @@ class Injector {
         await this.deinitialization;
     }
 
-}
-
-class InjectorPublic {
-
-    constructor(serviceContainer, injector) {
-        this.serviceContainer = serviceContainer;
-        this.injector = injector;
-    }
-
-
     async get(name) {
         // TODO Prevent duplicate dependencies if multiple
         //      `get(..)` calls are made.
         const service = await this.serviceContainer.get(name);
 
-        this.injector.dependencies.push(name);
+        this.dependencies.push(name);
 
         const serviceInjector = _.find(this.serviceContainer.rootInjector.children, (child) => {
             return child.object === service;
         });
 
-        serviceInjector.references.push(this.injector);
+        serviceInjector.references.push(this);
 
         return service;
     }
 
     release(name) {
-        _.pull(this.injector.dependencies, name);
+        _.pull(this.dependencies, name);
     }
 
     inject(object) {
         const childInjector = new Injector(this.serviceContainer, object);
-        this.injector.children.push(childInjector);
+        this.children.push(childInjector);
 
-        object[this.serviceContainer.property] = childInjector.public;
+        object[this.serviceContainer.property] = childInjector;
 
         return object;
     }
