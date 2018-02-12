@@ -58,7 +58,10 @@ class Injector {
         const childInjector = new Injector(this.serviceContainer, object);
         this.children.push(childInjector);
 
-        object[this.serviceContainer.property] = childInjector;
+        Object.defineProperty(object, this.serviceContainer.property, {
+            value: childInjector,
+            enumerable: false,
+        });
 
         return object;
     }
