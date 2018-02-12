@@ -50,6 +50,8 @@ class Injector {
 
     release(name) {
         _.pull(this.dependencies, name);
+        
+        // TODO Remove the link from the `references` list of service `name`.
     }
 
     inject(object) {
