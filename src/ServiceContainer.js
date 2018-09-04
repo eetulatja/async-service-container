@@ -134,7 +134,7 @@ class ServiceContainer {
      * @param {string} [name] Name of the service to deregister.
      *        If not given, all services are deregistered.
      *
-     @return {Promise} Resolved when all requested services are deinitialized.
+     * @return {Promise} Resolved when all requested services are deinitialized.
      */
     async deregister() {
         const deinitPromises = [];
