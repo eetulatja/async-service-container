@@ -127,7 +127,7 @@ class ServiceContainer {
      * Deregister services from the container.
      *
      * If a service has a `deinit` method defined on it, it is called and
-     * the service is considered deinitialized when that promise get fulfilled.
+     * the service is considered deinitialized when that promise gets fulfilled.
      * The deinitialization order is so that an individual service is deinitialized
      * after all its dependencies are deinitialized.
      *
