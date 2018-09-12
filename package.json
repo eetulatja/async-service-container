@@ -1,6 +1,6 @@
 {
   "name": "async-service-container",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Promise based service container for dependency injection.",
   "author": {
     "name": "Eetu Latja",
