@@ -54,14 +54,16 @@ class Injector {
         // TODO Remove the link from the `references` list of service `name`.
     }
 
-    inject(object) {
+    inject(object, exposeContainer = true) {
         const childInjector = new Injector(this.serviceContainer, object);
         this.children.push(childInjector);
 
-        Object.defineProperty(object, this.serviceContainer.property, {
-            value: childInjector,
-            enumerable: false,
-        });
+        if (exposeContainer) {
+            Object.defineProperty(object, this.serviceContainer.property, {
+                value: childInjector,
+                enumerable: false,
+            });
+        }
 
         return object;
     }

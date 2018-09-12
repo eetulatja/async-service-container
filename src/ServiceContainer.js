@@ -77,19 +77,21 @@ class ServiceContainer {
      * @param {string} serviceDefinitions.name - Name of the service.
      * @param {Object} [serviceDefinitions.options] - Possible options given to the
      *        `init` method of the service.
+     * @param {Object} [serviceDefinitions.inject=true] - If false, the service container
+     *        is not injected into the object.
      *
      * @return {Promise} Resolved when all services are ready.
      */
     async register(serviceDefinitions) {
         const servicePromises = serviceDefinitions.map(serviceDefinition => {
-            const { service, name, options } = serviceDefinition;
+            const { service, name, options, inject: exposeContainer = true } = serviceDefinition;
 
             if (this.services.has(name)) {
                 throw Error(`Duplicate service with name '${name}'.`);
             }
 
             // TODO Add explanation
-            this.rootInjector.inject(service);
+            this.rootInjector.inject(service, exposeContainer);
 
             // Use an IIFE to create a promise that gets resolved with this service object
             // after its `init` method is complete.
